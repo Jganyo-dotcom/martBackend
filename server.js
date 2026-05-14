@@ -11,6 +11,7 @@ const { createManager } = require("./src/config/admin.setup");
 // Define allowed origins
 const allowedOrigins = [
   "http://localhost:5173", // your frontend dev server
+  "https://elimart.netlify.app",
   // example deployed frontend
 ];
 
