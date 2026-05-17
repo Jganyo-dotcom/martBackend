@@ -13,6 +13,16 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 3,
     },
+    contact: {
+      type: String,
+      required: true,
+      minlength: 3,
+    },
+    mart: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Mart",
+    },
     email: {
       type: String,
       required: true,
@@ -28,7 +38,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       required: true,
-      enum: ["superior manager", "admin"],
+      enum: ["superior manager", "admin", "user"],
       default: "admin",
     },
     hasChangedPassword: {

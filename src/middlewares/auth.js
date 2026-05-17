@@ -8,7 +8,7 @@ const authmiddleware = (req, res, next) => {
       return res.status(401).json({ message: "no token provided , Login!!!" });
     }
 
-    const verify_token = jwt.verify(token, process.env.JWT_SECRETE);
+    const verify_token = jwt.verify(token, process.env.JWT_SECRET);
     if (!verify_token) {
       return res.status(401).json({ message: "invalid token sign In" });
     }
