@@ -38,6 +38,12 @@ const ProductSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    totalcost: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
     profitSoFar: {
       type: Number,
       required: true,

@@ -14,12 +14,14 @@ const saleSchema = new mongoose.Schema(
     },
     items: [
       {
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" }, // 🔑 add this
         productName: { type: String, required: true },
         quantity: { type: Number, required: true },
         unitPrice: { type: Number, required: true }, // selling price per unit
         costPrice: { type: Number, required: true }, // cost price per unit
         subtotal: { type: Number, required: true }, // quantity * unitPrice
         profit: { type: Number, required: true }, // (unitPrice - costPrice) * quantity
+        expense: { type: Number, required: true, default: 0 },
       },
     ],
     totalAmount: {
@@ -29,6 +31,10 @@ const saleSchema = new mongoose.Schema(
     totalProfit: {
       type: Number,
       required: true,
+    },
+    customerName: {
+      type: String,
+      default: "Walking Customer",
     },
     date: {
       type: Date,

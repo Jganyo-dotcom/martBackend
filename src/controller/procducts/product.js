@@ -19,6 +19,7 @@ const addProduct = async (req, res) => {
       quantityPerBox,
       sellingPricePerUnit,
       costPricePerBox,
+      totalcost,
     } = req.body;
     const martId = req.user.mart;
 
@@ -33,6 +34,8 @@ const addProduct = async (req, res) => {
     const costPerUnit = costPricePerBox / quantityPerBox;
     const profitPerUnit = sellingPricePerUnit - costPerUnit;
     const totalProfitPotential = profitPerUnit * totalUnits;
+    const Totalcost = boxesCount * costPricePerBox;
+    console.log(Totalcost);
 
     // ✅ Create new product
     const newProduct = new Product({
@@ -43,6 +46,7 @@ const addProduct = async (req, res) => {
       costPricePerBox,
       unitsLeft: totalUnits,
       totalProfit: totalProfitPotential,
+      totalcost: Totalcost,
       profitSoFar: 0,
       mart: mart._id,
     });
@@ -105,7 +109,7 @@ const getAllProducts = async (req, res) => {
 
 const addSale = async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items, customerName } = req.body;
     const mart = req.user.mart;
     const user = req.user.id;
 
@@ -129,6 +133,7 @@ const addSale = async (req, res) => {
       const costPrice = product.costPricePerBox / product.quantityPerBox;
       const subtotal = item.quantity * unitPrice;
       const profit = (unitPrice - costPrice) * item.quantity;
+      const expense = product.totalcost;
 
       processedItems.push({
         productId: product._id,
@@ -138,6 +143,7 @@ const addSale = async (req, res) => {
         costPrice,
         subtotal,
         profit,
+        expense,
       });
 
       // Update product stock & profitSoFar
@@ -153,8 +159,12 @@ const addSale = async (req, res) => {
       );
     }
 
-    const totalAmount = processedItems.reduce((sum, i) => sum + i.subtotal, 0);
+    const totalAmount = processedItems.reduce((sum, i) => sum + i.subtotal, 0); // the total amount not profit
     const totalProfit = processedItems.reduce((sum, i) => sum + i.profit, 0);
+    const totalCost = processedItems.reduce(
+      (sum, i) => sum + i.costPrice * i.quantity,
+      0,
+    );
 
     const newSale = new Sale({
       mart,
@@ -162,6 +172,7 @@ const addSale = async (req, res) => {
       items: processedItems,
       totalAmount,
       totalProfit,
+      customerName,
     });
 
     await newSale.save();
@@ -169,8 +180,13 @@ const addSale = async (req, res) => {
     // 🔑 Update Profit table for this mart
     await Profit.findOneAndUpdate(
       { mart },
-      { $inc: { totalProfit } }, // add this sale’s profit to cumulative total
-      { upsert: true, new: true }, // create if not exists
+      {
+        $inc: {
+          totalProfit, // add this sale’s profit
+          totalCost, // add this sale’s cost
+        },
+      },
+      { upsert: true, new: true }, // create if not exists, return updated doc
     );
 
     res.status(201).json({
@@ -204,6 +220,7 @@ const getTotalProfit = async (req, res) => {
     res.status(200).json({
       mart: profitRecord.mart,
       totalProfit: profitRecord.totalProfit,
+      totalexpense: profitRecord.totalCost,
     });
   } catch (error) {
     console.error("Error fetching total profit:", error.message);
@@ -211,38 +228,90 @@ const getTotalProfit = async (req, res) => {
   }
 };
 
+// controllers/productController.js
+
+const deleteItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+
+    // ✅ Find product
+    const product = await Product.findById(itemId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // ✅ Delete product itself
+    await Product.findByIdAndDelete(itemId);
+
+    // ✅ Cascade delete: remove product from any sales that referenced it
+    await Sale.updateMany(
+      { "items.productId": itemId },
+      {
+        $pull: { items: { productId: itemId } },
+      },
+    );
+
+    res.status(200).json({
+      message: "Product and related sale records deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting product:", error.message);
+    res.status(500).json({ message: "Failed to delete product" });
+  }
+};
+
+module.exports = { deleteItem };
+
 // DELETE /api/sales/:saleId/item/:productName
 const deleteSaleItem = async (req, res) => {
   try {
     const { saleId, productName } = req.params;
+    const { inputer, quantity } = req.body; // extra safety checks
 
-    // Find the sale
     const sale = await Sale.findById(saleId);
-    if (!sale) {
-      return res.status(404).json({ message: "Sale not found" });
-    }
+    if (!sale) return res.status(200).json({ message: "Sale not found" });
+    console.log(sale.items);
+    // Find the item by productName, inputer, and quantity
+    const itemToDelete = sale.items.find(
+      (i) => i.productName === productName && i.quantity === quantity,
+    );
 
-    // Find the item to delete
-    const itemToDelete = sale.items.find((i) => i.productName === productName);
     if (!itemToDelete) {
-      return res.status(404).json({ message: "Item not found in sale" });
+      return res.status(200).json({ message: "Item not found in sale" });
     }
 
-    // Remove the item from the sale
-    sale.items = sale.items.filter((i) => i.productName !== productName);
+    // Remove item
+    sale.items = sale.items.filter(
+      (i) => !(i.productName === productName && i.quantity === quantity),
+    );
 
     // Adjust totals
     sale.totalAmount -= itemToDelete.subtotal;
     sale.totalProfit -= itemToDelete.profit;
 
-    // Save updated sale
     await sale.save();
 
-    // 🔑 Update Profit table (subtract this item’s profit)
+    // 🔑 Update Profit table (subtract this item’s profit and cost)
     await Profit.findOneAndUpdate(
       { mart: sale.mart },
-      { $inc: { totalProfit: -itemToDelete.profit } },
+      {
+        $inc: {
+          totalProfit: -itemToDelete.profit,
+          totalCost: -(itemToDelete.costPrice * itemToDelete.quantity),
+        },
+      },
     );
+
+    // Update the product stock and profit after deleting the sale item
+    await Product.findByIdAndUpdate(itemToDelete.productId, {
+      $inc: {
+        unitsLeft: itemToDelete.quantity, // restore stock
+        profitSoFar: -itemToDelete.profit, // remove profit contribution
+        totalProfit: -itemToDelete.profit, // adjust product-level profit
+        totalcost: -(itemToDelete.costPrice * itemToDelete.quantity), // adjust product-level cost
+      },
+    });
+    console.log(itemToDelete.quantity);
 
     res.status(200).json({
       message: "Item deleted successfully",
@@ -275,7 +344,8 @@ module.exports = {
   addProduct,
   getAllProducts,
   addSale,
-  deleteSaleItem,
+  deleteItem,
   getSales,
   getTotalProfit,
+  deleteSaleItem,
 };

@@ -12,9 +12,9 @@ const loggerMiddleware = require("./src/middlewares/logger");
 // Middleware
 // Define allowed origins
 const allowedOrigins = [
-  "http://localhost:5173", // your frontend dev server
+  //"http://localhost:5173", // your frontend dev server
   "https://elimart.netlify.app",
-  "http://127.0.0.1:5500",
+  //"http://127.0.0.1:5500",
   // example deployed frontend
 ];
 
