@@ -1,14 +1,5 @@
 const authmiddleware = (req, res, next) => {
-  const token = req.cookies.authToken?.replace(/^"|"$/g, "");
-  console.log("Raw cookie value:", req.cookies.authToken);
-  console.log("First char:", req.cookies.authToken.charAt(0));
-  console.log(
-    "Last char:",
-    req.cookies.authToken.charAt(req.cookies.authToken.length - 1),
-  );
-
-  console.log("JWT_SECRET length:", process.env.JWT_SECRET.length);
-  console.log("JWT_SECRET value:", JSON.stringify(process.env.JWT_SECRET));
+  const token = req.cookies.authToken;
 
   if (!token) return res.status(401).json({ message: "No token provided" });
 
