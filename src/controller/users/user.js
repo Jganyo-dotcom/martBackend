@@ -39,6 +39,9 @@ const loginUser = async (req, res) => {
       { expiresIn: process.env.EXPIRES_IN },
     );
 
+    console.log("JWT_SECRET length:", process.env.JWT_SECRET.length);
+    console.log("JWT_SECRET value:", JSON.stringify(process.env.JWT_SECRET));
+
     // Set cookie only
     res.cookie("authToken", token, {
       httpOnly: true,

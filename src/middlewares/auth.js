@@ -7,6 +7,9 @@ const authmiddleware = (req, res, next) => {
     req.cookies.authToken.charAt(req.cookies.authToken.length - 1),
   );
 
+  console.log("JWT_SECRET length:", process.env.JWT_SECRET.length);
+  console.log("JWT_SECRET value:", JSON.stringify(process.env.JWT_SECRET));
+
   if (!token) return res.status(401).json({ message: "No token provided" });
 
   try {
