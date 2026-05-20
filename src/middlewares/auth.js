@@ -9,7 +9,7 @@ const authmiddleware = (req, res, next) => {
     // const cleanToken = token.trim();
 
     // 🔑 Hardcode the exact same string here
-    const decoded = jwt.verify(token, "TEMPORARY_TEST_SECRET_12345");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
 
     next();

@@ -36,8 +36,8 @@ const loginUser = async (req, res) => {
     // Temporarily comment out process.env.JWT_SECRET and use a hardcoded string
     const token = jwt.sign(
       { id: user._id, email: user.email, mart: user.mart, role: user.role },
-      "TEMPORARY_TEST_SECRET_12345", // 👈 Hardcode this exact string
-      { expiresIn: "24h" },
+      process.env.JWT_SECRET, // 👈 Hardcode this exact string
+      { expiresIn: process.env.EXPIRES_IN },
     );
 
     res.cookie("authToken", token, {
