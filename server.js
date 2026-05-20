@@ -3,6 +3,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const connection = require("./src/config/db");
 const app = express();
+const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
 const userRoute = require("./src/routes/userRoutes");
 const productRoute = require("./src/routes/products");
@@ -12,7 +13,7 @@ const loggerMiddleware = require("./src/middlewares/logger");
 // Middleware
 // Define allowed origins
 const allowedOrigins = [
-  //"http://localhost:5173", // your frontend dev server
+  "http://localhost:5173", // your frontend dev server
   "https://elimart.netlify.app",
   //"http://127.0.0.1:5500",
   // example deployed frontend
@@ -36,6 +37,7 @@ app.use(
 app.use(express.json());
 // app.use(loggerMiddleware)
 app.use(morgan("dev"));
+app.use(cookieParser()); // 🔑 register globally
 
 connection();
 // createManager

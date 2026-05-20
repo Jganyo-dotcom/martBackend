@@ -16,6 +16,7 @@ const loginUser = async (req, res) => {
     const { error } = loginSchema.validate(req.body);
     if (error)
       return res.status(400).json({ message: error.details[0].message });
+
     // Find user by email or username
     const user = await User.findOne({
       $or: [{ email: identifier }, { username: identifier }],
@@ -38,9 +39,17 @@ const loginUser = async (req, res) => {
       { expiresIn: process.env.EXPIRES_IN },
     );
 
+    // Set cookie only
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: true, // false in dev
+      sameSite: "none",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    // Respond without token
     res.status(200).json({
       message: "Login successful",
-      token,
       user: {
         id: user._id,
         username: user.username,
