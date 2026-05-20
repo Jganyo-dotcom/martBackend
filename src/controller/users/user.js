@@ -39,15 +39,14 @@ const loginUser = async (req, res) => {
       { expiresIn: process.env.EXPIRES_IN },
     );
 
-    console.log("JWT_SECRET length:", process.env.JWT_SECRET.length);
-    console.log("JWT_SECRET value:", JSON.stringify(process.env.JWT_SECRET));
-
-    // Set cookie only
     res.cookie("authToken", token, {
       httpOnly: true,
-      secure: true, // false in dev
+
+      secure: true,
+
       sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000,
+
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
     // Respond without token

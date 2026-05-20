@@ -19,6 +19,8 @@ const allowedOrigins = [
   // example deployed frontend
 ];
 
+app.use(cookieParser()); // 🔑 register globally
+app.use(express.json());
 // Configure CORS
 app.use(
   cors({
@@ -34,10 +36,9 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.json());
+
 // app.use(loggerMiddleware)
 app.use(morgan("dev"));
-app.use(cookieParser()); // 🔑 register globally
 
 connection();
 // createManager
