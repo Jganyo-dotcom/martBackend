@@ -6,10 +6,10 @@ const authmiddleware = (req, res, next) => {
   if (!token) return res.status(401).json({ message: "No token provided" });
 
   try {
-    const cleanToken = token.trim();
+    // const cleanToken = token.trim();
 
     // 🔑 Hardcode the exact same string here
-    const decoded = jwt.verify(cleanToken, "TEMPORARY_TEST_SECRET_12345");
+    const decoded = jwt.verify(token, "TEMPORARY_TEST_SECRET_12345");
     req.user = decoded;
 
     next();
