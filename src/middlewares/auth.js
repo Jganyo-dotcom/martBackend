@@ -1,5 +1,6 @@
 const authmiddleware = (req, res, next) => {
-  const token = req.cookies.authToken; // 🔑 read cookie
+  const token = req.cookies.authToken?.replace(/^"|"$/g, "");
+
   if (!token) return res.status(401).json({ message: "No token provided" });
 
   try {
