@@ -5,12 +5,14 @@ const authmiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    console.log("token in")
+    console.log("token in");
+    console.log(token);
+    console.log(req.cookies);
     next();
   } catch (err) {
-    console.log("no token")
+    console.log("no token");
     return res.status(403).json({ message: "Invalid token" });
   }
 };
 
-module.exports = authmiddleware
+module.exports = authmiddleware;
