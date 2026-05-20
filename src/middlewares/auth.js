@@ -5,16 +5,17 @@ const authmiddleware = (req, res, next) => {
 
   try {
     const cleanToken = token.trim();
-    
+
     // 🔑 Hardcode the exact same string here
-    const decoded = jwt.verify(cleanToken, "TEMPORARY_TEST_SECRET_12345"); 
+    const decoded = jwt.verify(cleanToken, "TEMPORARY_TEST_SECRET_12345");
     req.user = decoded;
 
     next();
   } catch (err) {
-    console.error("Verification failed for token:", token);
+    console.error("JWT ERROR TYPE:", err.name); // Will print "JsonWebTokenError" or "TokenExpiredError"
+    console.error("JWT ERROR REASON:", err.message); // Will print the exact reason, like "malformed token"
     return res.status(403).json({ message: "Invalid tokenN OH" });
   }
 };
 
-module.exports = authmiddleware
+module.exports = authmiddleware;
