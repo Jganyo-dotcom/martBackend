@@ -11,6 +11,8 @@ const authmiddleware = (req, res, next) => {
     next();
   } catch (err) {
     console.log("no token");
+    console.log(token);
+    console.log(req.cookies);
     return res.status(403).json({ message: "Invalid token" });
   }
 };
