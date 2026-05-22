@@ -350,6 +350,34 @@ const getProductById = async (req, res) => {
 
   res.status(200).json({ message: "your product", product });
 };
+
+// Controller: add packs and update units
+const addPacks = async (req, res) => {
+  const { productId } = req.params;
+  const { packsToAdd } = req.body;
+
+  try {
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Update packs count
+    product.boxesCount += packsToAdd;
+
+    // Update units left (packs * items per pack)
+    product.unitsLeft += packsToAdd * product.quantityPerBox;
+
+    await product.save();
+
+    res.json(product);
+  } catch (err) {
+    console.error("Error adding packs:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   addProduct,
   getAllProducts,
@@ -359,4 +387,5 @@ module.exports = {
   getTotalProfit,
   deleteSaleItem,
   getProductById,
+  addPacks,
 };
