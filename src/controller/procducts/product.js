@@ -340,6 +340,16 @@ const getSales = async (req, res) => {
   }
 };
 
+const getProductById = async (req, res) => {
+  const id = req.params.productId;
+  const mart = req.user.mart;
+  const product = await Product.find({ _id: id, mart: mart });
+  if (product.length === 0) {
+    return res.status(200).json({ message: "requested item not found" });
+  }
+
+  res.status(200).json({ message: "your product", product });
+};
 module.exports = {
   addProduct,
   getAllProducts,
@@ -348,4 +358,5 @@ module.exports = {
   getSales,
   getTotalProfit,
   deleteSaleItem,
+  getProductById,
 };
