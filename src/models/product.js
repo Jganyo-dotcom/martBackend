@@ -18,12 +18,39 @@ const ProductSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
+    new_quantityPerBox: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
     sellingPricePerUnit: {
       type: Number,
       required: true,
       min: 0,
     },
+    newSellingPricePerUnit: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    units_To_Sell_To_StartNewPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+    how_Many_Units_Were_Last_Added: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
     costPricePerBox: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    new_costPricePerBox: {
       type: Number,
       required: true,
       min: 0,
@@ -39,6 +66,12 @@ const ProductSchema = new mongoose.Schema(
       min: 0,
     },
     totalcost: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+    new_totalcost: {
       type: Number,
       required: true,
       min: 0,

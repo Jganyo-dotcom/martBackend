@@ -107,6 +107,65 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+const updatePrice = async (req, res) => {
+  try {
+    const {
+      newSellingPricePerUnit,
+      new_costPricePerBox,
+      new_totalcost,
+      units_to_be_added,
+      itemsPerBox,
+      noBoxes,
+    } = req.body;
+
+    const { productId } = req.params;
+
+    // Validation
+    if (
+      !newSellingPricePerUnit ||
+      !new_costPricePerBox ||
+      !new_totalcost ||
+      !itemsPerBox ||
+      !noBoxes
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const theProduct = await Product.findById(productId);
+    if (!theProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Calculate new values
+    const new_quantityPerBox = itemsPerBox;
+    const units_To_Sell_To_StartNewPrice = theProduct.unitsLeft; // old stock still left
+    const how_Many_Units_Were_Last_Added = itemsPerBox * noBoxes;
+    const totalcost = theProduct.totalcost + new_totalcost;
+
+    // Update product with new pricing info
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      {
+        new_quantityPerBox,
+        newSellingPricePerUnit,
+        units_To_Sell_To_StartNewPrice,
+        how_Many_Units_Were_Last_Added,
+        new_costPricePerBox,
+        new_totalcost: totalcost,
+      },
+      { new: true },
+    );
+
+    return res.status(200).json({
+      message: "Price updated successfully, will take effect soon",
+      product: updatedProduct,
+    });
+  } catch (err) {
+    console.error("Error updating price:", err.message);
+    return res.status(500).json({ message: "Failed to update price" });
+  }
+};
+
 const addSale = async (req, res) => {
   try {
     const { items, customerName } = req.body;
@@ -128,12 +187,35 @@ const addSale = async (req, res) => {
           .status(404)
           .json({ message: `Product not found: ${item.productId}` });
       }
-
-      const unitPrice = product.sellingPricePerUnit;
-      const costPrice = product.costPricePerBox / product.quantityPerBox;
-      const subtotal = item.quantity * unitPrice;
-      const profit = (unitPrice - costPrice) * item.quantity;
-      const expense = product.totalcost;
+      if (
+        product.units_To_Sell_To_StartNewPrice > 0 &&
+        product.unitsLeft <= product.how_Many_Units_Were_Last_Added
+      ) {
+        const unitPrice = product.newSellingPricePerUnit;
+        const costPrice =
+          product.new_costPricePerBox / product.new_quantityPerBox;
+        const subtotal = item.quantity * unitPrice;
+        const profit = (unitPrice - costPrice) * item.quantity;
+        const expense = product.new_totalcost;
+        const quantityPerBox = product.new_quantityPerBox;
+        const updatedProduct = await Product.findByIdAndUpdate(item.productId, {
+          quantityPerBox,
+          new_quantityPerBox: 0,
+          sellingPricePerUnit: unitPrice,
+          newSellingPricePerUnit: 0,
+          units_To_Sell_To_StartNewPrice: 0,
+          how_Many_Units_Were_Last_Added: 0,
+          costPricePerBox,
+          new_costPricePerBox: 0,
+          totalcost: item.new_totalcost,
+        });
+      } else {
+        const unitPrice = product.sellingPricePerUnit;
+        const costPrice = product.costPricePerBox / product.quantityPerBox;
+        const subtotal = item.quantity * unitPrice;
+        const profit = (unitPrice - costPrice) * item.quantity;
+        const expense = product.totalcost;
+      }
 
       processedItems.push({
         productId: product._id,
@@ -192,6 +274,7 @@ const addSale = async (req, res) => {
     res.status(201).json({
       message: "Sale recorded successfully",
       sale: newSale,
+      totalCost: totalCost,
     });
   } catch (error) {
     console.error("Error saving sale:", error.message);
@@ -388,4 +471,5 @@ module.exports = {
   deleteSaleItem,
   getProductById,
   addPacks,
+  updatePrice,
 };

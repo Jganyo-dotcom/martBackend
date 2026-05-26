@@ -48,6 +48,7 @@ const loginUser = async (req, res) => {
       sameSite: "none",
 
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: "/api",
     });
 
     // Respond without token
