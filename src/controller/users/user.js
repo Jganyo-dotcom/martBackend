@@ -42,13 +42,10 @@ const loginUser = async (req, res) => {
 
     res.cookie("authToken", token, {
       httpOnly: true,
-
       secure: true,
-      //process.env.NODE_ENV === "production"
-      sameSite: "none",
-
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: "/api",
+      path: "/",
     });
 
     // Respond without token
